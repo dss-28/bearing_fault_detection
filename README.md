@@ -1,178 +1,351 @@
-# bearing_fault_detection
-
-Got it — now I’ll compress your full work into a **clean, professional, high-impact README** that keeps **all important technical depth** but removes unnecessary overload.
-
-This is exactly what recruiters + GitHub viewers want 👇
-
----
-
-# 🚀 Bearing Fault Detection using Machine Learning
+# 🚀 IMS Bearing Fault Detection using Machine Learning
 
 ## 📌 Overview
 
-This project builds an **end-to-end machine learning pipeline** for detecting faults in rolling element bearings using vibration signals.
+This project presents an end-to-end **predictive maintenance pipeline** for rolling element bearing fault detection using the **IMS Bearing Dataset** from the NASA Prognostics Center of Excellence.
 
-The system classifies bearing condition into:
+The system processes raw vibration signals, extracts degradation-aware statistical features, and performs leakage-free fault classification using Machine Learning.
 
-* **Healthy**
-* **Inner Race Fault**
-* **Outer Race Fault**
-* **Ball Fault**
-
-It combines **signal processing + physics-informed labeling + ML models** to achieve high accuracy on real-world data.
+The project focuses on:
+- Industrial vibration analytics
+- Predictive maintenance
+- Leakage-free evaluation
+- Physics-informed degradation modeling
 
 ---
 
-## 📂 Dataset
+# 🎯 Objective
 
-* **Dataset:** IMS Bearing Dataset
-* **Source:** NASA Prognostics Center of Excellence
-* **Sampling Rate:** 20 kHz
-* **Type:** Run-to-failure vibration data
-* **Format:** Multiple multi-channel CSV files
+Detect bearing health conditions from vibration data and classify them into:
+
+| Class | Condition |
+|---|---|
+| 0 | Healthy |
+| 1 | Inner Race Fault |
+| 2 | Outer Race Fault |
+
+---
+
+# 📂 Dataset
+
+## IMS Bearing Dataset
+- Source: NASA Prognostics Center of Excellence
+- Type: Run-to-failure bearing vibration dataset
+- Sampling Rate: 20 kHz
+- Data Format: Multi-channel vibration signals
 
 ### Why this dataset?
+The IMS dataset contains:
+- Real bearing degradation
+- Progressive failure behavior
+- Non-stationary vibration patterns
+- Industrial operating conditions
 
-* Real degradation (not synthetic)
-* Faults evolve over time
-* Suitable for **predictive maintenance systems**
-
----
-
-## 🧠 Key Contributions
-
-### ✅ Physics-Informed Labeling
-
-* First ~80% of each file → **Healthy**
-* Remaining → **Fault type (based on test setup)**
-
-→ Mimics real fault progression instead of random labeling
+making it highly suitable for predictive maintenance research.
 
 ---
 
-### ✅ Leakage-Free Evaluation
+# 🧠 Key Contributions
 
-* Used **GroupKFold (group = file ID)**
-* Prevents windows from same signal appearing in both train & test
+## ✅ Physics-Informed Labeling
 
----
+Instead of random labeling, the dataset was labeled using degradation progression logic.
 
-### ✅ Large-Scale Data Handling
+```python
+HEALTHY_END = 1200
+```
 
-* ~369K signal windows
-* Multi-file → single structured dataset
+### Labeling Strategy
+- Initial files → Healthy
+- Later files → Fault condition
 
----
-
-## ⚙️ Pipeline
-
-### 1. Signal Processing
-
-* Window size: **1024**
-* Stride: **512 (overlapping)**
+This better reflects real industrial failure progression.
 
 ---
 
-### 2. Feature Engineering
+## ✅ Leakage-Free Validation
 
-#### Time Domain
+One of the biggest issues in vibration ML pipelines is data leakage caused by overlapping windows appearing in both train and test sets.
 
-* Mean, RMS, Std, Skewness, Kurtosis
-* Crest factor, Impulse factor, Shape factor
+This project solves the issue using:
 
-#### Frequency Domain
+```python
+GroupKFold(n_splits=5)
+```
 
-* FFT-based features
-* Spectral centroid, bandwidth, entropy
-* Dominant frequency
+where:
+- each file ID is treated as a separate group
+- windows from the same signal file never appear in both train and test sets
 
-#### Band Energy Features
-
-* 0–1kHz, 1–5kHz, 5–10kHz, 10kHz+
-
-#### Envelope Features
-
-* Hilbert transform
-* Envelope RMS
+This produces realistic evaluation performance.
 
 ---
 
-### 3. Feature Processing
+## ✅ Multi-Bearing Fault Modeling
 
-* StandardScaler
-* LightGBM-based feature selection
+Two bearings were processed independently:
 
----
-
-### 4. Models Used
-
-* **LightGBM** (Best)
-* **Random Forest**
-* **XGBoost**
-* **SVM**
-* **KNN (with PCA)**
+| Bearing | Channels | Fault Type |
+|---|---|---|
+| B3 | 4–5 | Inner Race Fault |
+| B4 | 6–7 | Outer Race Fault |
 
 ---
 
-## 📊 Results
+# ⚙️ System Pipeline
 
-### 🔥 Cross-Validation Accuracy (5-Fold GroupKFold)
-
-| Model         | Mean Accuracy |
-| ------------- | ------------- |
-| LightGBM      | **~96.7%**    |
-| Random Forest | ~96.4%        |
-| XGBoost       | ~96.2%        |
-| KNN           | ~89.7%        |
-| SVM           | ~87.5%        |
-
----
-
-### 📌 Classification Highlights (LightGBM)
-
-* **Inner Race:** Perfect detection (F1 = 1.00)
-* **Outer Race:** ~0.98 F1
-* **Ball Fault:** ~0.96 F1
-* **Healthy:** ~0.97 F1
+```text
+Raw Vibration Signals
+        ↓
+Signal Windowing
+        ↓
+Feature Extraction
+        ↓
+Feature Scaling
+        ↓
+Leakage-Free GroupKFold Validation
+        ↓
+LightGBM Classification
+        ↓
+Bearing Fault Prediction
+```
 
 ---
 
-## 📈 Key Insights
+# 🔧 Signal Processing
 
-* Tree-based models significantly outperform SVM/KNN
-* Feature engineering (time + frequency + envelope) is critical
-* Physics-based labeling improves real-world relevance
-* GroupKFold is essential to avoid data leakage
+## Windowing Strategy
 
----
+The vibration signal is segmented into fixed-length windows.
 
-## 🏁 Conclusion
+```python
+window_size = 1024
+stride = 512
+```
 
-This project demonstrates a **production-level ML pipeline** for predictive maintenance:
-
-* Raw vibration → structured features
-* Smart labeling strategy
-* Robust evaluation
-* High accuracy (~97%)
+### Why overlapping windows?
+- Captures local degradation behavior
+- Improves temporal sensitivity
+- Preserves transient fault signatures
 
 ---
 
-## 🔮 Future Work
+# 📊 Feature Engineering
 
-* Deep Learning (CNN / LSTM / Transformers)
-* Real-time deployment
-* Multi-component fault diagnosis
+The project extracts condition-monitoring features directly from vibration windows.
 
 ---
 
-## ⭐ Why This Project Stands Out
+## 1️⃣ RMS Features
 
-* Real industrial dataset
-* Physics + ML integration
-* Leakage-aware validation
-* Multi-model benchmarking
+Root Mean Square captures vibration energy and fault severity.
+
+```python
+rms = np.sqrt(np.mean(w**2, axis=1))
+```
+
+Extracted:
+- RMS mean
+- RMS standard deviation
 
 ---
 
-If you want next level:
-I can make this into a **🔥 standout GitHub (with diagrams + visuals)** or a **LinkedIn post series that actually gets inbound DMs** — that’s where the real impact comes.
+## 2️⃣ Standard Deviation Features
+
+Measures vibration spread and instability.
+
+```python
+std = np.std(w, axis=1)
+```
+
+Extracted:
+- STD mean
+- STD standard deviation
+
+---
+
+## 3️⃣ Peak Features
+
+Captures impulsive vibration behavior caused by bearing damage.
+
+```python
+peak = np.max(np.abs(w), axis=1)
+```
+
+Extracted:
+- Peak mean
+- Peak standard deviation
+
+---
+
+## 4️⃣ Peak-to-RMS Ratio
+
+Used as a damage severity indicator.
+
+```python
+pr = peak / (rms + 1e-8)
+```
+
+Useful for detecting impulsive fault signatures.
+
+---
+
+## 5️⃣ Trend Features
+
+Degradation progression is modeled using RMS trend slopes.
+
+```python
+slope = ...
+```
+
+This helps capture temporal fault evolution.
+
+---
+
+## 6️⃣ Damage Accumulation Feature
+
+Measures progressive vibration fluctuation growth.
+
+```python
+np.sum(np.abs(np.diff(rms.mean(axis=1))))
+```
+
+Useful for degradation-aware learning.
+
+---
+
+# 🤖 Machine Learning Model
+
+## LightGBM Classifier
+
+The final model uses:
+
+```python
+LGBMClassifier(
+    n_estimators=300,
+    learning_rate=0.05,
+    num_leaves=31,
+    class_weight="balanced"
+)
+```
+
+### Why LightGBM?
+- Fast training
+- Strong performance on structured features
+- Handles non-linear degradation patterns
+- Efficient for vibration analytics
+
+---
+
+# 🔍 Validation Strategy
+
+## Leakage-Free GroupKFold
+
+```python
+GroupKFold(n_splits=5)
+```
+
+### Why this matters
+Random splitting in vibration datasets causes:
+- train-test contamination
+- unrealistic accuracy
+- poor real-world generalization
+
+Group-based validation ensures:
+- robust testing
+- realistic deployment simulation
+- reliable benchmarking
+
+---
+
+# 📈 Results
+
+The pipeline achieved strong classification performance under leakage-free evaluation.
+
+## Key Observations
+- Healthy bearings detected reliably
+- Fault classes separated effectively
+- Trend-aware features improved robustness
+- Tree-based learning performed strongly on vibration statistics
+
+---
+
+# 🏭 Industrial Relevance
+
+This project reflects real-world predictive maintenance systems used in:
+
+- Manufacturing industries
+- Rotating machinery monitoring
+- Industrial IoT
+- Smart factories
+- Reliability engineering
+
+Applications include:
+- Early fault detection
+- Downtime reduction
+- Maintenance scheduling
+- Equipment health monitoring
+
+---
+
+# 🚀 Technical Highlights
+
+✅ Real industrial vibration dataset  
+✅ Leakage-free validation  
+✅ Physics-informed labeling  
+✅ Multi-channel vibration processing  
+✅ Trend-aware degradation features  
+✅ Overlapping window signal analysis  
+✅ Industrial predictive maintenance focus  
+
+---
+
+# 📁 Project Structure
+
+```text
+bearing_fault_detection/
+│
+├── data/
+├── notebooks/
+├── models/
+├── results/
+├── plots/
+└── README.md
+```
+
+---
+
+# 🔮 Future Work
+
+Planned extensions include:
+
+- Deep Learning models
+  - CNN
+  - CNN + BiLSTM
+  - Attention Models
+  - Transformers
+
+- Remaining Useful Life (RUL) prediction
+- Frequency-domain feature learning
+- Real-time fault monitoring
+- Multi-bearing fault diagnosis
+
+---
+
+# ⭐ Conclusion
+
+This project demonstrates a robust end-to-end predictive maintenance pipeline combining:
+
+- signal processing
+- degradation-aware feature engineering
+- leakage-free evaluation
+- machine learning for industrial diagnostics
+
+The focus is not only on model accuracy, but also on:
+- realistic evaluation methodology
+- scalable processing
+- industrial deployment relevance
+
+making the system closer to real-world predictive maintenance workflows than standard academic classification projects.
+
+---
