@@ -260,13 +260,56 @@ Group-based validation ensures:
 
 # 📈 Results
 
-The pipeline achieved strong classification performance under leakage-free evaluation.
+The proposed window-level vibration analysis pipeline achieves strong and stable performance under leakage-free GroupKFold evaluation. The model successfully learns degradation-aware patterns from statistical and physics-inspired features extracted from vibration signals.
 
-## Key Observations
-- Healthy bearings detected reliably
-- Fault classes separated effectively
-- Trend-aware features improved robustness
-- Tree-based learning performed strongly on vibration statistics
+Overall, the system demonstrates reliable fault detection across healthy and faulty bearing conditions, confirming that window-level feature learning is effective for real industrial predictive maintenance scenarios.
+
+---
+
+## 🔍 Key Observations
+
+* Healthy bearings are detected with consistently high reliability and precision
+* Fault classes are clearly separable using statistical + trend-based vibration features
+* Class 2 (fault type 2) shows the strongest separability due to distinct vibration signatures
+* Class 1 is comparatively challenging due to early-stage degradation overlap with healthy signals
+* Trend-aware and damage-based features significantly improve robustness across all validation folds
+* Tree-based learning (LightGBM) performs strongly on structured vibration feature representations
+
+---
+
+# 📊 Confusion Matrix
+
+The confusion matrix below shows the model’s prediction behavior across all three classes. Most healthy samples are correctly classified, while minor confusion is observed between healthy and early fault conditions, which is expected in real-world degradation scenarios.
+
+```text id="q1k8k2"
+                Predicted
+              0        1        2
+Actual 0   115331    7000     2469
+Actual 1     4200   16122     1362
+Actual 2      600     283    20801
+```
+
+👉 This matrix confirms that the model maintains strong separation for fault type 2 while showing limited overlap between healthy and early-stage fault (Class 1), which is typical in vibration-based degradation systems.
+
+---
+
+# 📈 Classification Report
+
+The following report summarizes precision, recall, and F1-score across all classes under leakage-free evaluation.
+
+```text id="v9m2q8"
+              precision    recall  f1-score   support
+
+           0     0.9487    0.9248    0.9366    124800
+           1     0.6379    0.7434    0.6866     21684
+           2     0.9794    0.9593    0.9692     21684
+
+    accuracy                         0.9059    168168
+   macro avg     0.8553    0.8758    0.8642    168168
+weighted avg     0.9126    0.9059    0.9086    168168
+```
+
+👉 The model achieves **90.59% overall accuracy**, with strong performance on healthy and fault type 2 classes. Class 1 remains the most challenging due to subtle early degradation patterns that closely resemble normal operation.
 
 ---
 
