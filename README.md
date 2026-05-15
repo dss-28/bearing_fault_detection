@@ -25,7 +25,7 @@ Detect bearing health conditions from vibration data and classify them into:
 | ----- | ---------------- |
 | 0     | Healthy          |
 | 1     | Inner Race Fault |
-| 2     | Outer Race Fault |
+| 2     | Ball Race Fault |
 
 ---
 
